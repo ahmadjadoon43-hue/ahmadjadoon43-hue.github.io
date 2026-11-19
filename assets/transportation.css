@@ -44,10 +44,12 @@ html:has(.transportation) { scroll-padding-top: 18px; }
   border-bottom: 1px solid var(--line);
 }
 .field-intro { align-self: center; padding-block: 12px; }
+.field-identity { display: flex; align-items: center; gap: clamp(14px, 2vw, 32px); margin-bottom: 20px; }
+.field-identity .field-portrait { width: clamp(74px, 9.5vw, 144px); height: auto; flex: none; border-radius: 3px; }
 .field-location { margin: 0 0 15px; color: #49636a; font: 500 .83rem/1.4 'Helvetica Neue',Arial,sans-serif; letter-spacing: .085em; text-transform: uppercase; }
 .field-intro h1 {
   font: 600 clamp(4.6rem,7.9vw,8.9rem)/.86 'Barlow Semi Condensed','Arial Narrow',Arial,sans-serif;
-  color: #132c35; margin: 0 0 20px; letter-spacing: -.05em;
+  color: #132c35; margin: 0; letter-spacing: -.05em;
 }
 .field-intro h1 span { display: block; }
 .field-specialty { max-width: 29ch; margin: 0 0 15px; font-size: clamp(1.15rem,1.55vw,1.6rem); font-weight: 550; line-height: 1.23; letter-spacing: -.02em; }
@@ -171,7 +173,9 @@ html:has(.transportation) { scroll-padding-top: 18px; }
 @media (max-width: 700px) {
   .field-opening { grid-template-columns:1fr; gap:24px; padding-block:25px; }
   .field-intro { padding-block:0; }
-  .field-intro h1 { font-size:clamp(3.65rem,11.7vw,6.1rem); margin-bottom:12px; }
+  .field-intro h1 { font-size:clamp(3.4rem,10vw,5rem); }
+  .field-identity { margin-bottom: 12px; }
+  .field-identity .field-portrait { width: clamp(72px, 17vw, 102px); }
   .field-intro h1 span { display:inline; }
   .field-location { margin-bottom:8px; }
   .field-specialty { max-width:none; font-size:1.1rem; margin-bottom:12px; }
