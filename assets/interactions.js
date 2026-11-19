@@ -95,10 +95,99 @@
   field?.addEventListener('input', filterProjects);
   filters.forEach(b => b.addEventListener('click', () => {category = b.dataset.categoryFilter; filterProjects();}));
   $('.clear-filters')?.addEventListener('click', () => {field.value = ''; category = 'all'; filterProjects(); field.focus({preventScroll:true});});
-  document.addEventListener('keydown', e => {
-    if (e.key === '/' && field && !e.ctrlKey && !e.metaKey && !e.altKey && !preview?.open && !figure?.open && !e.target.closest('input,textarea,[contenteditable="true"]')) {
-      e.preventDefault(); field.focus(); field.scrollIntoView({block:'center',behavior:reduceMotion ? 'instant' : 'smooth'});
+  // Search the same published project catalog from any page, including internship contributions.
+  const nav = document.querySelector('header nav');
+  const finder = document.createElement('dialog');
+  if (nav && projects.length && typeof finder.showModal === 'function') {
+    finder.className = 'work-search';
+    finder.setAttribute('aria-labelledby', 'work-search-title');
+    finder.innerHTML = `
+      <div class="work-search-inner">
+        <div class="work-search-head"><h2 id="work-search-title">Search the portfolio</h2><button type="button">Close</button></div>
+        <label for="work-query">Search by project, skill, or tool</label>
+        <input id="work-query" type="search" autocomplete="off" placeholder="e.g. Tableau, traffic operations, GIS">
+        <output aria-live="polite" aria-atomic="true"></output>
+        <ul class="work-results"></ul>
+      </div>`;
+    document.body.append(finder);
+    const triggerButton = document.createElement('button');
+    triggerButton.type = 'button';
+    triggerButton.className = 'find-work';
+    triggerButton.setAttribute('aria-haspopup', 'dialog');
+    triggerButton.innerHTML = '<span>Search portfolio</span>';
+    nav.append(triggerButton);
+    const query = finder.querySelector('input');
+    const status = finder.querySelector('output');
+    const list = finder.querySelector('ul');
+    const catalog = projects.map(project => ({
+      project,
+      search: [project.title, project.kind, project.category, project.tools, project.summary, ...project.work].join(' ').toLowerCase()
+    }));
+
+    function showMatches() {
+      const terms = query.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
+      const matches = catalog.filter(entry => terms.every(term => entry.search.includes(term)));
+      const fragment = document.createDocumentFragment();
+      for (const {project} of matches) {
+        const row = document.createElement('li');
+        const title = document.createElement('a');
+        title.href = project.url;
+        title.textContent = project.title;
+        const kind = document.createElement('small');
+        kind.textContent = project.kind + ' · ' + project.category;
+        title.append(kind);
+        row.append(title);
+        const pdf = project.files.find(file => file.url.toLowerCase().endsWith('.pdf'));
+        if (pdf) {
+          const source = document.createElement('a');
+          source.href = pdf.url;
+          source.textContent = project.slug.startsWith('hntb-') ? 'Resume' : 'PDF';
+          source.setAttribute('aria-label', source.textContent + ' for ' + project.title);
+          row.append(source);
+        }
+        fragment.append(row);
+      }
+      list.replaceChildren(fragment);
+      list.scrollTop = 0;
+      status.textContent = matches.length ? matches.length + (matches.length === 1 ? ' result' : ' results') : 'No matches. Try a project name or a tool such as Tableau.';
     }
+    let returnFocus;
+    function openSearch() {
+      if (document.querySelector('dialog[open]')) return;
+      returnFocus = document.activeElement;
+      query.value = '';
+      showMatches();
+      finder.showModal();
+      query.focus();
+    }
+    triggerButton.addEventListener('click', openSearch);
+    query.addEventListener('input', showMatches);
+    finder.querySelector('button').addEventListener('click', () => finder.close());
+    finder.addEventListener('close', () => returnFocus?.focus({preventScroll:true}));
+    finder.addEventListener('click', event => {
+      if (event.target !== finder) return;
+      const bounds = finder.getBoundingClientRect();
+      if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) finder.close();
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey || document.querySelector('dialog[open]')) return;
+      if (event.target.closest('input, textarea, select, [contenteditable="true"]')) return;
+      event.preventDefault();
+      openSearch();
+    });
+  }
+
+  document.querySelectorAll('.probe-figure').forEach(figure => {
+    const controls = figure.querySelector('.probe-picker');
+    const buttons = Array.from(controls.querySelectorAll('[data-direction]'));
+    const views = Array.from(figure.querySelectorAll('[data-approach]'));
+    function setApproach(direction) {
+      buttons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.direction === direction)));
+      views.forEach(view => { view.hidden = view.dataset.approach !== direction; });
+    }
+    buttons.forEach(button => button.addEventListener('click', () => setApproach(button.dataset.direction)));
+    setApproach('northbound');
+    controls.hidden = false;
   });
 
   // Interactive viewing of original report images, without invented map data.
